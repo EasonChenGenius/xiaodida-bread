@@ -1,0 +1,10 @@
+data/
+miniprogram/project.private.config.json
+*.sqlite-wal
+*.sqlite-shm
+*.bak
+.env
+.env.*
+!.env.example
+node_modules/
+dist/

@@ -1,0 +1,11 @@
+{
+  "pages": [
+    "pages/home/index"
+  ],
+  "window": {
+    "navigationBarTitleText": "校递达配送助手",
+    "navigationBarBackgroundColor": "#f1f3ed",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f1f3ed"
+  }
+}

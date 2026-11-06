@@ -1,0 +1,22 @@
+{
+  "name": "richang-campus-bread",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/*.test.mjs",
+    "backup": "node scripts/backup.mjs",
+    "check:release": "node --env-file-if-exists=.env scripts/release-check.mjs",
+    "identity:inspect": "node --env-file-if-exists=.env scripts/init-operator.mjs",
+    "build:release": "node scripts/build-release.mjs",
+    "start:web": "node --env-file-if-exists=.env.web server.mjs",
+    "operator:web": "node --env-file-if-exists=.env.web scripts/create-web-operator.mjs"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "version": "0.10.0",
+  "dependencies": {
+    "mysql2": "3.24.6"
+  }
+}

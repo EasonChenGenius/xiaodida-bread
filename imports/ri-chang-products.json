@@ -1,0 +1,448 @@
+{
+  "source": "快团团 / 日尝手作面包 / 商品页",
+  "miniProgramLink": "#小程序://快团团/v7eQoULJxqjeggg",
+  "observedDate": "2026-11-02",
+  "coverage": "用户截图已核对八类44款：碱水条7、小餐包4、软欧9、司康4、bagel3、碱水球11、米软欧3、恰巴塔3。恰巴塔依据2026-11-02 22.35.49及22.35.53截图，猪肉铺德肠及鸡枞菌各9元，辣皮子牛肉12.8元；名称按截图保留。全部为已提供截图的覆盖范围，不保证快团团实时全量。库存及过敏原未提供，规格仅记录截图明确内容。",
+  "products": [
+    {
+      "key": "richang-beef",
+      "name": "灯影牛肉碱水条",
+      "price": 900,
+      "description": "不参与会员折扣",
+      "category": "碱水条系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-matcha-raspberry",
+      "name": "抹茶树莓碱水条",
+      "price": 800,
+      "description": "树莓酸甜 抹茶清香",
+      "category": "碱水条系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-pistachio",
+      "name": "开心果奶酥碱水条",
+      "price": 800,
+      "description": "新品上市；团长推荐",
+      "category": "碱水条系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-matcha",
+      "name": "抹茶碱水条",
+      "price": 800,
+      "description": "采用五十铃抹茶；团长推荐",
+      "category": "碱水条系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-grape",
+      "name": "葡萄碱水条",
+      "price": 800,
+      "description": "新品；不参与会员折扣",
+      "category": "碱水条系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-sausage-gongcai",
+      "name": "辣肠贡菜碱水条",
+      "price": 800,
+      "description": "一口下去嘎嘣脆；超高回购率；团长推荐；不参与会员折扣",
+      "category": "碱水条系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-matcha-jasmine",
+      "name": "抹茶茉莉碱水条",
+      "price": 800,
+      "description": "不参与会员折扣",
+      "category": "碱水条系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-rice-bread",
+      "name": "大米面包",
+      "price": 350,
+      "description": "米香味浓郁；不参与会员折扣",
+      "category": "小餐包系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-cranberry-cheese",
+      "name": "蔓越莓乳酪",
+      "price": 350,
+      "description": "不参与会员折扣",
+      "category": "小餐包系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-blood-rice-roll",
+      "name": "血糯米餐包",
+      "price": 350,
+      "description": "不参与会员折扣",
+      "category": "小餐包系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-red-velvet-rulao-roll",
+      "name": "红丝绒rulao餐包",
+      "price": 350,
+      "description": "不参与会员折扣",
+      "category": "小餐包系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-plum",
+      "name": "乌梅子酱",
+      "price": 900,
+      "description": "面团无糖无油；不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-lava-matcha",
+      "name": "爆浆抹茶",
+      "price": 800,
+      "description": "不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-earl-grey",
+      "name": "伯爵红茶奶酥条",
+      "price": 800,
+      "description": "一口下去全是料的幸福感；团长推荐；新品上市；不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-tomato-sausage",
+      "name": "番茄德肠肉松ru'lao",
+      "price": 800,
+      "description": "不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-soy-milk",
+      "name": "豆浆面包",
+      "price": 700,
+      "description": "纯豆浆打面 无夹心；不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-snow-cheese",
+      "name": "雪山ru'lao",
+      "price": 800,
+      "description": "团长推荐；新品上市；不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-floss-roll",
+      "name": "松松卷",
+      "price": 800,
+      "description": "推荐；饱腹感强 口感扎实；不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-cheese-sausage",
+      "name": "芝士德肠软面包",
+      "price": 800,
+      "description": "不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-pistachio-guava",
+      "name": "开心果芭乐软欧",
+      "price": 800,
+      "description": "新品；树莓卡仕达 芭乐果干 开心果奶酥；不参与会员折扣",
+      "category": "软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-matcha-cheese-scone",
+      "name": "抹茶乳酪司康",
+      "price": 800,
+      "description": "不参与会员折扣",
+      "category": "司康系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-strawberry-cheese-scone",
+      "name": "草莓乳酪司康",
+      "price": 800,
+      "description": "冬天里的第一个草莓司康；新品上市；团长推荐；不参与会员折扣",
+      "category": "司康系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-blueberry-scone",
+      "name": "蓝莓司康",
+      "price": 800,
+      "description": "超高回购率；不参与会员折扣",
+      "category": "司康系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-black-gold-pistachio-scone",
+      "name": "黑金开心果乳酪司康",
+      "price": 800,
+      "description": "不参与会员折扣",
+      "category": "司康系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-strawberry-yogurt-bagel",
+      "name": "草莓优格贝果",
+      "price": 990,
+      "description": "新品；不参与会员折扣",
+      "category": "bagel系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-tiramisu-bagel",
+      "name": "提 la. mi. su bagel贝贝",
+      "price": 1280,
+      "description": "不参与会员折扣",
+      "category": "bagel系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-pepper-mushroom-beef-bagel",
+      "name": "烧椒鸡纵菌牛肉贝果",
+      "price": 990,
+      "description": "推荐；不参与会员折扣",
+      "category": "bagel系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-octopus-ball",
+      "name": "章。 yu 小丸子碱水球",
+      "price": 990,
+      "description": "新品；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-wholewheat-jujube-ball",
+      "name": "全麦红枣碱水球（一袋6个无糖无油）",
+      "price": 900,
+      "description": "不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": "一袋6个"
+    },
+    {
+      "key": "richang-pumpkin-ball",
+      "name": "南瓜碱水球",
+      "price": 800,
+      "description": "无糖无油；爆款返场；网红爆款；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": "一袋6个"
+    },
+    {
+      "key": "richang-matcha-raspberry-ball",
+      "name": "抹茶树莓碱水球",
+      "price": 700,
+      "description": "树莓奶酪酸甜口味；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-double-matcha-ball",
+      "name": "双重抹茶碱水球",
+      "price": 700,
+      "description": "团长推荐；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-cheese-ham-ball",
+      "name": "芝士火腿碱水球",
+      "price": 600,
+      "description": "夹心火腿，肉松，芝士。喜欢咸口；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-blueberry-cheese-ball",
+      "name": "蓝莓乳酪碱水球",
+      "price": 600,
+      "description": "不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-lemon-ball",
+      "name": "柠檬碱水🍋",
+      "price": 600,
+      "description": "柠檬清香；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-triple-matcha-ball",
+      "name": "抹茶三重奏",
+      "price": 900,
+      "description": "新品；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-blood-rice-cheese-ball",
+      "name": "血糯米奶酪碱水球",
+      "price": 600,
+      "description": "低糖血糯米搭配奶酪；网红爆款；新品上市；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-original-ball",
+      "name": "原味碱水球",
+      "price": 200,
+      "description": "原味碱水球饱腹感强👍；今日必买；团长推荐；不参与会员折扣",
+      "category": "碱水球系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-osmanthus-matcha-rice-pudding",
+      "name": "桂花抹茶米布丁",
+      "price": 1280,
+      "description": "新品；不参与会员折扣",
+      "category": "米软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-rose-matcha-rice-bread",
+      "name": "玫瑰抹茶米软欧",
+      "price": 900,
+      "description": "人气王；馅料足 树莓奶酪搭配抹茶奶酥；新品上市；团长推荐；不参与会员折扣",
+      "category": "米软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-pandan-jasmine-rice-bread",
+      "name": "斑斓茉莉米软欧",
+      "price": 900,
+      "description": "人气王；原味奶酪搭配茉莉奶酥 味道清香；新品上市；团长推荐；不参与会员折扣",
+      "category": "米软欧系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-pork-sausage-ciabatta",
+      "name": "猪肉铺德肠恰巴塔",
+      "price": 900,
+      "description": "不参与会员折扣",
+      "category": "恰巴塔系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-mushroom-ciabatta",
+      "name": "鸡枞菌恰巴塔",
+      "price": 900,
+      "description": "自己熬的鸡枞菌 真的不要太香啦；团长推荐；网红爆款；不参与会员折扣",
+      "category": "恰巴塔系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    },
+    {
+      "key": "richang-chili-beef-ciabatta",
+      "name": "辣皮子牛肉恰巴塔",
+      "price": 1280,
+      "description": "新品；新鲜牛肉搭配新疆辣皮子；不参与会员折扣",
+      "category": "恰巴塔系列",
+      "stock": null,
+      "allergens": null,
+      "specification": null
+    }
+  ]
+}
