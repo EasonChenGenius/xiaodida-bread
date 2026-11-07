@@ -23,10 +23,10 @@ export function createApplication({mode=process.env.BREAD_AUTH_MODE||'demo',file
  const server=http.createServer(async(req,res)=>{
   const json=(status,data)=>{if(res.destroyed)return;res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data));};
   const url=new URL(req.url,'http://localhost');
-  if(req.method==='GET'&&url.pathname==='/healthz'){try{const store=await ready;await store.ping?.();return json(200,{ok:true,service:'xiaodida',version:'0.11.1',mode,storage:storeType});}catch{return json(503,{ok:false,error:'存储未就绪'});}}
+  if(req.method==='GET'&&url.pathname==='/healthz'){try{const store=await ready;await store.ping?.();return json(200,{ok:true,service:'xiaodida',version:'0.11.2',mode,storage:storeType});}catch{return json(503,{ok:false,error:'存储未就绪'});}}
   if(url.pathname.startsWith('/api/')){
    let store,db;try{store=await ready;db=await store.getState();migrate(db);}catch{return json(503,{error:'配送服务暂不可用，请稍后重试'});}
-   if(req.method==='GET'&&url.pathname==='/api/config')return json(200,{version:'0.11.1',mode,subscriptionGroups:mode==='wechat'?notifier.groups:[]});
+   if(req.method==='GET'&&url.pathname==='/api/config')return json(200,{version:'0.11.2',mode,subscriptionGroups:mode==='wechat'?notifier.groups:[]});
    const actor=auth.authenticate(req,db);
    const publicLogin=mode==='web'&&['/api/auth/register','/api/auth/password','/api/auth/recovery-request','/api/auth/password-reset'].includes(url.pathname)||mode==='wechat'&&url.pathname==='/api/auth/wechat';
    if(!publicLogin&&!actor)return json(401,{error:'请先登录，或登录已过期'});
