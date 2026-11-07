@@ -23,10 +23,10 @@ export function createApplication({mode=process.env.BREAD_AUTH_MODE||'demo',file
  const server=http.createServer(async(req,res)=>{
   const json=(status,data)=>{if(res.destroyed)return;res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});res.end(JSON.stringify(data));};
   const url=new URL(req.url,'http://localhost');
-  if(req.method==='GET'&&url.pathname==='/healthz'){try{const store=await ready;await store.ping?.();return json(200,{ok:true,service:'xiaodida',version:'0.11.3',mode,storage:storeType});}catch{return json(503,{ok:false,error:'存储未就绪'});}}
+  if(req.method==='GET'&&url.pathname==='/healthz'){try{const store=await ready;await store.ping?.();return json(200,{ok:true,service:'xiaodida',version:'0.12.0',mode,storage:storeType});}catch{return json(503,{ok:false,error:'存储未就绪'});}}
   if(url.pathname.startsWith('/api/')){
    let store,db;try{store=await ready;db=await store.getState();migrate(db);}catch{return json(503,{error:'配送服务暂不可用，请稍后重试'});}
-   if(req.method==='GET'&&url.pathname==='/api/config')return json(200,{version:'0.11.3',mode,subscriptionGroups:mode==='wechat'?notifier.groups:[]});
+   if(req.method==='GET'&&url.pathname==='/api/config')return json(200,{version:'0.12.0',mode,subscriptionGroups:mode==='wechat'?notifier.groups:[]});
    const actor=auth.authenticate(req,db);
    const publicLogin=mode==='web'&&['/api/auth/register','/api/auth/password','/api/auth/recovery-request','/api/auth/password-reset'].includes(url.pathname)||mode==='wechat'&&url.pathname==='/api/auth/wechat';
    if(!publicLogin&&!actor)return json(401,{error:'请先登录，或登录已过期'});
@@ -66,6 +66,17 @@ export function createApplication({mode=process.env.BREAD_AUTH_MODE||'demo',file
    }catch(e){const infra=!!e.code||/数据已被其他进程/.test(e.message);return json(e.status===401?401:infra?503:400,{error:infra?'服务繁忙，请保留表单稍后重试':e instanceof SyntaxError?'请求格式无效':e.message});}
   }
   if(mode==='wechat')return json(404,{error:'请通过微信小程序使用'});
+  const portalPaths={'/':'customer','/customer/':'customer','/merchant/':'merchant','/courier/':'courier'};
+  if(['/customer','/merchant','/courier'].includes(url.pathname)){res.writeHead(308,{Location:url.pathname+'/'});return res.end();}
+  if(portalPaths[url.pathname]){
+   if(req.method!=='GET')return json(405,{error:'方法不支持'});
+   try{const portal=portalPaths[url.pathname];let html=readFileSync(join(root,'web/index.html'),'utf8');
+    html=html.replace('data-portal="customer"','data-portal="'+portal+'"').replace(/<!--PORTAL_INTRO-->[\s\S]*?<!--\/PORTAL_INTRO-->/,()=>readFileSync(join(root,'web',portal,'index.html'),'utf8'));
+    html=html.replace('<a class="brand" href="/">','<a class="brand" href="/'+portal+'/">');
+    if(portal!=='customer')html=html.replace('<button name="intent" value="register" class="secondary">','<button name="intent" value="register" class="secondary" hidden>').replace('密码（至少6位）','密码（至少12位）').replaceAll('minlength="6" maxlength="128"','minlength="12" maxlength="128"');
+    res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});return res.end(html);
+   }catch{return json(500,{error:'页面暂不可用'});}
+  }
   const files={'/':'index.html','/app.js':'app.js','/style.css':'style.css','/logo.png':'logo.png'};if(!files[url.pathname])return json(404,{error:'接口不存在'});
   try{if(url.pathname==='/logo.png'){res.setHeader('Content-Type','image/png');return res.end(readFileSync(join(root,'miniprogram/assets/platform-logo.png')));}
    res.setHeader('Content-Type',url.pathname.endsWith('.js')?'text/javascript':url.pathname.endsWith('.css')?'text/css':'text/html; charset=utf-8');res.end(readFileSync(join(root,'web',files[url.pathname])));

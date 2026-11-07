@@ -7,7 +7,8 @@ export function createWebAuth({now=Date.now}={}){
  const issue=(db,user)=>{const token=randomBytes(32).toString('base64url'),expiresAt=now()+8*3600000;db.authSessions=(db.authSessions||[]).filter(s=>s.actor!==user.id&&s.expiresAt>now());db.authSessions.push({hash:hash(token),actor:user.id,role:user.role,expiresAt,kind:'web'});return {token,expiresAt};};
  return {
  authenticate(req,db){const token=tokenFrom(req);if(!token)return null;const session=db.authSessions?.find(s=>s.hash===hash(token)&&s.kind==='web'&&s.expiresAt>now());if(!session)return null;const u=db.users.find(u=>u.id===session.actor);return u?.webCredential&&u.role===session.role?u.id:null;},
- async register(db,{username,password},role='buyer'){
+ async register(db,{username,password,portal},role='buyer'){
+  if(portal!==undefined&&portal!=='customer')throw Error('此入口不开放注册，请联系负责人分配账号');
   if(!['buyer','merchant','courier'].includes(role))throw Error('账号角色无效');
   if(typeof username!=='string'||!/^[a-zA-Z0-9_]{4,32}$/.test(username))throw Error('账号须为4至32位字母、数字或下划线');
   const minimum=role==='buyer'?6:12;if(typeof password!=='string'||password.length<minimum||password.length>128)throw Error('密码须为'+minimum+'至128个字符');
@@ -16,12 +17,13 @@ export function createWebAuth({now=Date.now}={}){
   const user={id:role==='buyer'?randomBytes(16).toString('hex'):role,role,name:role==='merchant'?'日尝手作商家':role==='courier'?'配送员':'新同学',boundAt:null,webCredential:{username:key,salt,digest}};
   db.users.push(user);return issue(db,user);
  },
- async login(db,{username,password}){
+ async login(db,{username,password,portal}){
   const key=typeof username==='string'?username.toLowerCase():'';
   if(typeof password!=='string'||password.length>128)throw invalid();
   const user=db.users.find(u=>u.webCredential?.username===key),credential=user?.webCredential;
   const actual=await scrypt(password,credential?.salt||'00000000000000000000000000000000',64);
   if(!credential||!timingSafeEqual(actual,Buffer.from(credential.digest,'hex')))throw invalid();
+  if(portal!==undefined){const expected=({customer:'buyer',merchant:'merchant',courier:'courier'})[portal];if(!expected)throw Object.assign(Error('登录入口无效'),{status:400});if(user.role!==expected)throw Object.assign(Error('此账号不属于当前入口，请选择对应身份登录'),{status:403});}
   return issue(db,user);
  },
  // Shared persistent budgets are updated even for rejected credentials by the HTTP layer.
