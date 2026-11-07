@@ -16,10 +16,10 @@ export function buildRelease(destination){
  project.setting={...project.setting,urlCheck:true,uploadWithSourceMap:false};
  writeFileSync(join(out,'miniprogram/project.config.json'),JSON.stringify(project,null,2)+'\n');
  for(const f of [...backendFiles.map(f=>'backend/'+f),...miniFiles.map(f=>'miniprogram/'+f),'miniprogram/config.js','miniprogram/project.config.json'])manifest.push({path:f,sha256:createHash('sha256').update(readFileSync(join(out,f))).digest('hex')});
- writeFileSync(join(out,'MANIFEST.json'),JSON.stringify({version:'0.11.2',builtAt:new Date().toISOString(),status:'prepared-not-deployed',files:manifest},null,2)+'\n');
+ writeFileSync(join(out,'MANIFEST.json'),JSON.stringify({version:'0.11.3',builtAt:new Date().toISOString(),status:'prepared-not-deployed',files:manifest},null,2)+'\n');
  return {directory:out,files:manifest.length};
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
- const output=process.argv[2]||join(root,'dist','xiaodida-0.11.2-'+Date.now());
+ const output=process.argv[2]||join(root,'dist','xiaodida-0.11.3-'+Date.now());
  console.log(JSON.stringify(buildRelease(output)));
 }

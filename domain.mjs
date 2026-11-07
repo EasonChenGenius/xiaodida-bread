@@ -20,10 +20,24 @@ export const stages=['待备货','待取货','配送中','待签收','已签收'
 export function initial({demo=true}={}){return migrate({demo,categories:[...defaultCategories],products:[],orders:[]});}
 const notify=(db,o,title,message)=>db.notifications.unshift({id:crypto.randomUUID(),buyerId:o.buyerId,orderId:o.id,number:o.number,stage:o.stage,product:o.summary,location:o.building+'楼下货架',push:{status:'pending'},title,message,at:new Date().toISOString(),read:false});
 const requireValue=(ok,msg)=>{if(!ok)throw Error(msg)};
+function validAvatar(value){
+ if(['','leaf','bread','sun'].includes(value))return true;
+ if(typeof value!=='string'||value.length>12000||!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(value))return false;
+ const image=Buffer.from(value.slice(23),'base64');
+ if(image.length<20||image.readUInt16BE(0)!==0xffd8||image.readUInt16BE(image.length-2)!==0xffd9)return false;
+ for(let pos=2;pos+4<image.length;){
+  if(image[pos++]!==0xff)return false;while(image[pos]===0xff)pos++;
+  if(pos+3>image.length)return false;const marker=image[pos++];if(marker===0xda||marker===0xd9)return false;
+  const length=image.readUInt16BE(pos);if(length<2||pos+length>image.length)return false;
+  if(marker===0xc0||marker===0xc2){if(length<8)return false;const height=image.readUInt16BE(pos+3),width=image.readUInt16BE(pos+5);return width>0&&height>0&&width<=128&&height<=128;}
+  pos+=length;
+ }return false;
+}
 export function mutate(db,actor,action,b){
  migrate(db);
  const user=db.users.find(u=>u.id===actor);
  if(action==='notification-read'){const n=db.notifications.find(n=>n.id===b.id&&n.buyerId===actor);requireValue(n,'通知不存在');n.read=true;return {ok:true};}
+ if(action==='avatar'){requireValue(user&&['buyer','merchant','courier'].includes(user.role),'请先登录');requireValue(validAvatar(b.avatar),'头像须为内置样式或压缩后的128像素以内JPEG图片');user.avatar=b.avatar;return {ok:true};}
  if(action==='profile'){
  requireValue(user?.role==='buyer','仅客户可修改自己的称呼');requireValue(typeof b.name==='string'&&b.name.trim().length>0&&b.name.trim().length<=30,'称呼须为1至30字');user.name=b.name.trim();return {ok:true};
  }
@@ -98,7 +112,7 @@ export function view(db,actor){
  migrate(db);const user=db.users.find(u=>u.id===actor);const role=actor==='merchant'||actor==='courier'?actor:'buyer';
  const safeUser=u=>({id:u.id,name:u.name,bound:!!u.boundAt});
  return {branding,notifications:db.notifications.filter(n=>n.buyerId===actor),deliveryDays,deliveryWindow,handoffPoint,categories:db.categories,buildings,products:db.products,
- me:{id:actor,role,name:user?.name||(role==='merchant'?'日尝手作商家':'配送员'),bound:!!user?.boundAt},
+ me:{id:actor,role,name:user?.name||(role==='merchant'?'日尝手作商家':'配送员'),bound:!!user?.boundAt,avatar:user?.avatar||''},
  customers:actor==='merchant'?db.users.filter(u=>u.role==='buyer'&&u.boundAt).map(safeUser):[],
  bindingRequests:actor==='merchant'||user?.role==='buyer'?db.bindingRequests.filter(r=>r.expiresAt>Date.now()&&(actor==='merchant'||r.buyerId===actor)).map(r=>({id:r.id,expiresAt:r.expiresAt,name:db.users.find(u=>u.id===r.buyerId)?.name,merchantName:'日尝手作'})):[],
  orders:db.orders.map(o=>({...o,merchantId:o.merchantId||branding.merchantId,merchantName:o.merchantName||branding.merchantName})).filter(o=>actor==='merchant'||actor==='courier'&&(o.stage===1||o.courierId===actor)||o.buyerId===actor).sort((a,b)=>actor==='courier'?Number(a.stage===4&&!a.issue)-Number(b.stage===4&&!b.issue):0),stages};

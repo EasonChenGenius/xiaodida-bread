@@ -10,7 +10,7 @@ export function createWebAuth({now=Date.now}={}){
  async register(db,{username,password},role='buyer'){
   if(!['buyer','merchant','courier'].includes(role))throw Error('账号角色无效');
   if(typeof username!=='string'||!/^[a-zA-Z0-9_]{4,32}$/.test(username))throw Error('账号须为4至32位字母、数字或下划线');
-  if(typeof password!=='string'||password.length<12||password.length>128)throw Error('密码须为12至128个字符');
+  const minimum=role==='buyer'?6:12;if(typeof password!=='string'||password.length<minimum||password.length>128)throw Error('密码须为'+minimum+'至128个字符');
   const key=username.toLowerCase();if(db.users.some(u=>u.webCredential?.username===key)||role!=='buyer'&&db.users.some(u=>u.id===role))throw Error('无法创建该账号，请更换账号或联系负责人');
   const salt=randomBytes(16).toString('hex'),digest=(await scrypt(password,salt,64)).toString('hex');
   const user={id:role==='buyer'?randomBytes(16).toString('hex'):role,role,name:role==='merchant'?'日尝手作商家':role==='courier'?'配送员':'新同学',boundAt:null,webCredential:{username:key,salt,digest}};
@@ -52,8 +52,8 @@ export function createWebAuth({now=Date.now}={}){
   request.attempts++;
   const supplied=typeof token==='string'&&/^[A-Za-z0-9_-]{43}$/.test(token)?hash(token):'0'.repeat(64);
   if(!request.tokenHash||!timingSafeEqual(Buffer.from(request.tokenHash,'hex'),Buffer.from(supplied,'hex')))throw Error('恢复凭证无效、已使用或过期');
-  if(typeof password!=='string'||password.length<12||password.length>128)throw Error('新密码须为12至128个字符');
   const user=db.users.find(u=>u.id===request.actor&&u.webCredential);if(!user)throw Error('账号暂不可恢复，请联系负责人');
+  const minimum=user.role==='buyer'?6:12;if(typeof password!=='string'||password.length<minimum||password.length>128)throw Error('新密码须为'+minimum+'至128个字符');
   const salt=randomBytes(16).toString('hex');user.webCredential={...user.webCredential,salt,digest:(await scrypt(password,salt,64)).toString('hex')};
   db.authSessions=(db.authSessions||[]).filter(s=>s.actor!==user.id);request.usedAt=now();delete request.tokenHash;
   db.webSecurityEvents??=[];db.webSecurityEvents.push({action:'password-reset',actor:user.id,requestId,at:now()});
