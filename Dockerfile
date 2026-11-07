@@ -7,6 +7,7 @@ COPY server.mjs auth.mjs domain.mjs notifications.mjs storage.mjs mysql-store.mj
 COPY miniprogram/brand.js ./miniprogram/brand.js
 COPY imports/ri-chang-products.json ./imports/ri-chang-products.json
 COPY web/ ./web/
+COPY scripts/create-web-operator.mjs scripts/approve-web-recovery.mjs scripts/web-store.mjs scripts/web-release-check.mjs ./scripts/
 COPY miniprogram/assets/platform-logo.png ./miniprogram/assets/platform-logo.png
 USER node
 EXPOSE 8080

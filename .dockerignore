@@ -19,3 +19,9 @@
 !web/**
 !miniprogram/assets/
 !miniprogram/assets/platform-logo.png
+
+!scripts/
+!scripts/create-web-operator.mjs
+!scripts/approve-web-recovery.mjs
+!scripts/web-store.mjs
+!scripts/web-release-check.mjs

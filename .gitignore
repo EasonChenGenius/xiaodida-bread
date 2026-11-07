@@ -8,3 +8,4 @@ miniprogram/project.private.config.json
 !.env.example
 node_modules/
 dist/
+!.env.web.example
