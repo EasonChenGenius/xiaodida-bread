@@ -1,0 +1,258 @@
+<view class="page app-shell">
+<view class="brand">
+<image class="brand-logo" src="/assets/platform-logo.png" mode="aspectFit"/>
+<view class="brand-copy">
+<view class="brand-name">{{branding.platformName}}</view>
+<text>{{branding.platformSubtitle}}</text>
+</view>
+</view>
+<view class="muted campus-label">四川师范大学 · 成龙校区</view>
+<view class="branch-label">当前分支 · 日尝手作面包配送</view>
+<view wx:if="{{!ready}}" class="card">
+<view class="title">{{startupError?'暂时无法连接':'正在读取配送信息'}}</view>
+<view class="muted">{{startupError || '请稍候…'}}</view>
+<button wx:if="{{startupError}}" bindtap="bootstrap">重新连接</button>
+</view>
+<view wx:if="{{ready && syncError}}" class="sync-error">
+<text>{{syncError}}</text>
+<button class="secondary" bindtap="bootstrap">重新同步</button>
+</view>
+<view wx:if="{{ready}}">
+<view wx:if="{{authMode==='wechat' && !loggedIn}}" class="card login-card">
+<view class="title">登录，查看你的配送订单</view>
+<view class="muted">查看配送进度、签收与历史订单。首次微信登录自动建立账号，无需设置密码。</view>
+<button bindtap="login" disabled="{{busy}}">微信登录</button>
+</view>
+<block wx:if="{{authMode==='demo' || loggedIn}}">
+<view wx:if="{{currentView==='my'}}">
+<view class="profile-banner">
+<image class="profile-avatar" src="/assets/platform-logo.png" mode="aspectFit"/>
+<view>
+<view class="profile-name">{{me.name}}</view>
+<view class="muted">{{authMode==='demo'?'本机演示账号':'配送服务账号'}}</view>
+</view>
+</view>
+<view class="account-menu">
+<button class="menu-row" bindtap="openHistory">
+<text>历史订单</text>
+<text>{{historyCount}} 单 ›</text>
+</button>
+<button class="menu-row" bindtap="openNotices">
+<text>配送消息</text>
+<text>{{unreadCount>0?unreadCount+'条未读':'查看消息'}} ›</text>
+</button>
+<button wx:if="{{me.role==='merchant'}}" class="menu-row" data-role="merchant" bindtap="openWorkbench">
+<text>商家工作台</text>
+<text>建单与客户管理 ›</text>
+</button>
+<button wx:if="{{me.role==='courier'}}" class="menu-row" data-role="courier" bindtap="openWorkbench">
+<text>配送员工作台</text>
+<text>查看配送任务 ›</text>
+</button>
+</view>
+<view wx:if="{{me.role==='buyer'}}" class="card">
+<view class="title">{{me.bound?'已绑定日尝手作':'首次使用 · 绑定日尝手作'}}</view>
+<input value="{{customerName}}" data-key="customerName" bindinput="field" maxlength="30" placeholder="方便商家识别的称呼"/>
+<button bindtap="saveName" disabled="{{busy}}">保存称呼</button>
+<block wx:if="{{!me.bound}}">
+<view class="muted">把绑定码提供给商家，并在这里确认匹配。绑定码10分钟有效，新码替换旧码。</view>
+<button bindtap="bindingCode" disabled="{{busy}}">生成新绑定码</button>
+<view class="title">{{bindingCode}}</view>
+<view wx:for="{{bindingRequests}}" wx:key="id" class="review">日尝手作请求将你加入客户名单，为你建立配送单。<button data-id="{{item.id}}" data-action="binding-confirm" bindtap="confirmBinding" disabled="{{busy}}">确认绑定日尝手作</button>
+<button data-id="{{item.id}}" data-action="binding-reject" bindtap="confirmBinding" disabled="{{busy}}">拒绝本次绑定</button>
+</view>
+</block>
+</view>
+<view wx:if="{{authMode==='demo'}}" class="card">
+<view class="muted">演示身份仅用于本机测试；正式版工作台按账号权限开放。</view>
+<picker range="{{roles}}" value="{{role}}" bindchange="roleChange">
+<view class="picker">测试身份：{{roles[role]}} ▾</view>
+</picker>
+</view>
+<button wx:if="{{authMode==='wechat'}}" class="secondary" bindtap="logout">退出登录</button>
+</view>
+<view wx:if="{{currentView==='history' || currentView==='notices' || currentView==='workbench'}}" class="subpage-head">
+<button class="back-link" bindtap="backToMy">‹ 返回我的</button>
+<view class="muted">{{viewTitle}}</view>
+</view>
+<block wx:if="{{currentView==='workbench'}}">
+<block wx:if="{{actor==='merchant'}}">
+<view class="card">
+<view class="title">绑定买家并建立配送单</view>
+<picker range="{{buyerNames}}" value="{{buyerIndex < 0 ? 0 : buyerIndex}}" data-key="buyerIndex" bindchange="field">
+<view class="picker">买家：{{buyerIndex < 0 ? '请选择这张配送单对应的买家' : buyerNames[buyerIndex]}} ▾</view>
+</picker>
+<view class="items-editor">
+<view class="title">本单面包</view>
+<view wx:for="{{orderRows}}" wx:for-item="row" wx:for-index="rowIdx" wx:key="id" class="item-editor-row">
+<picker range="{{productNames}}" value="{{row.productIndex < 0 ? 0 : row.productIndex}}" data-index="{{rowIdx}}" data-key="productIndex" bindchange="orderRowField">
+<view class="picker">面包 {{rowIdx+1}}：{{row.productIndex < 0 ? '请选择商品' : productNames[row.productIndex]}} ▾</view>
+</picker>
+<input placeholder="数量" type="number" value="{{row.quantity}}" data-index="{{rowIdx}}" data-key="quantity" bindinput="orderRowField"/>
+<button wx:if="{{orderRows.length>1}}" data-index="{{rowIdx}}" bindtap="removeOrderRow" class="secondary">移除本款</button>
+</view>
+<button bindtap="addOrderRow" disabled="{{orderRows.length>=20}}" class="secondary">＋ 添加一款面包</button>
+<view class="muted">合计 ¥{{orderTotal}}</view>
+</view>
+<picker range="{{buildings}}" value="{{buildingIndex < 0 ? 0 : buildingIndex}}" data-key="buildingIndex" bindchange="field">
+<view class="picker">配送楼栋：{{buildingIndex < 0 ? '请选择楼栋' : buildings[buildingIndex]}} ▾</view>
+</picker>
+<view class="muted">交接点：{{handoffPoint}}<text> · </text>每周配送一次 · {{deliveryWindow}}</view>
+<picker range="{{deliveryDays}}" value="{{deliveryDayIndex < 0 ? 0 : deliveryDayIndex}}" data-key="deliveryDayIndex" bindchange="field">
+<view class="picker">每周配送日：{{deliveryDayIndex < 0 ? '请选择星期几配送' : deliveryDays[deliveryDayIndex]}} ▾</view>
+</picker>
+<button bindtap="order" disabled="{{busy}}">匹配买家并创建配送单</button>
+</view>
+<view class="card">
+<view class="title">绑定新买家</view>
+<input value="{{bindCode}}" data-key="bindCode" bindinput="field" maxlength="12" placeholder="输入客户提供的12位绑定码"/>
+<button bindtap="bindBuyer" disabled="{{busy}}">提交匹配 · 等待客户确认</button>
+<view class="muted" wx:for="{{bindingRequests}}" wx:key="id">{{item.name}} · 等待确认</view>
+<view class="muted">已绑定客户 {{customers.length}} 位</view>
+</view>
+</block>
+</block>
+<block wx:if="{{currentView==='orders' || currentView==='history' || currentView==='workbench'}}">
+<view class="orders-heading">
+<view>
+<view class="title">{{viewTitle}}</view>
+<view class="muted">{{visibleOrders.length}} 单{{filterBuildingIndex>0?' · '+filterBuildings[filterBuildingIndex]:''}}{{filterDayIndex>0?' · '+filterDays[filterDayIndex]:''}}</view>
+</view>
+<button class="filter-toggle" bindtap="toggleFilters">{{filtersOpen?'收起筛选':'筛选'}}{{filterBuildingIndex>0 || filterDayIndex>0?' · 已选':''}}</button>
+</view>
+<view wx:if="{{filtersOpen}}" class="order-filters">
+<picker range="{{filterBuildings}}" value="{{filterBuildingIndex}}" data-key="filterBuildingIndex" bindchange="filterOrders">
+<view class="picker">楼栋：{{filterBuildings[filterBuildingIndex]}} ▾</view>
+</picker>
+<picker range="{{filterDays}}" value="{{filterDayIndex}}" data-key="filterDayIndex" bindchange="filterOrders">
+<view class="picker">配送日：{{filterDays[filterDayIndex]}} ▾</view>
+</picker>
+<picker wx:if="{{currentView==='workbench'}}" range="{{filterStatuses}}" value="{{filterStatusIndex}}" data-key="filterStatusIndex" bindchange="filterOrders">
+<view class="picker">状态：{{filterStatuses[filterStatusIndex]}} ▾</view>
+</picker>
+<button bindtap="resetFilters" class="secondary">清除筛选</button>
+<view class="muted">显示 {{visibleOrders.length}} / {{orderSourceCount}} 单</view>
+</view>
+<view wx:if="{{!visibleOrders.length && !syncError}}" class="card muted">{{currentView==='history'?'暂无历史订单':currentView==='orders'?'暂无进行中的订单，商家为你建单后会显示在这里。':'暂无符合条件的配送任务'}}</view>
+<view class="card delivery-card" wx:for="{{visibleOrders}}" wx:key="id">
+<view class="merchant-label">商家 · {{item.merchantName || branding.merchantName}}</view>
+<view class="top">
+<text class="muted">{{item.number}}</text>
+<text class="badge status-{{item.stage}} {{item.issue?'status-issue':''}}">{{item.issue?'异常待核实':item.status}}</text>
+</view>
+<view class="title">{{item.items.length>1 ? item.items.length+'款面包 · 共'+item.quantity+'件' : item.summary}}</view>
+<view wx:if="{{item.items.length>1}}" wx:for="{{item.items}}" wx:for-item="line" wx:key="productId" class="order-line">
+<text>{{line.name}} × {{line.quantity}}</text>
+<text>¥{{line.total / 100}}</text>
+</view>
+<view class="order-amount">合计 ¥{{item.amount}}</view>
+<view class="muted order-slot">{{item.slot}}</view>
+<view wx:if="{{actor==='merchant'}}" class="muted">对应买家：{{item.buyerName}}</view>
+<view class="delivery-location">{{item.building}} · {{item.address}}</view>
+<view class="stage-track">
+<view wx:for="{{stages}}" wx:for-item="stageName" wx:for-index="stageIdx" wx:key="*this" class="stage-step {{item.stage >= stageIdx ?'step-done':''}} {{stageIdx===item.stage?'step-current':''}}">
+<view class="stage-bar">
+</view>
+<text>{{stageName}}</text>
+</view>
+</view>
+<button class="details-toggle" data-id="{{item.id}}" bindtap="toggleOrderDetails">{{expandedOrders[item.id]?'收起配送记录':'查看配送记录与商品说明'}}<text>{{expandedOrders[item.id]?'−':'＋'}}</text>
+</button>
+<view wx:if="{{expandedOrders[item.id]}}" class="order-details">
+<view class="muted">配料与过敏原：{{item.allergens || '待商家补充'}}</view>
+<view class="timeline">
+<view wx:for="{{item.events}}" wx:for-item="event" wx:key="index">{{event.label}}<view class="event-time">{{event.time}}</view>
+</view>
+</view>
+</view>
+<button wx:if="{{actor==='merchant' && item.stage===0}}" data-id="{{item.id}}" bindtap="progress" disabled="{{busy || item.issue}}">备货完成 · 等待取货</button>
+<button wx:if="{{actor==='courier' && item.stage===1}}" data-id="{{item.id}}" bindtap="progress" disabled="{{busy || item.issue}}">领取并开始配送</button>
+<button wx:if="{{actor==='courier' && item.stage===2}}" data-id="{{item.id}}" bindtap="progress" disabled="{{busy || item.issue}}">已送达交接点</button>
+<button wx:if="{{actor===item.buyerId && item.stage===3}}" data-id="{{item.id}}" bindtap="progress" disabled="{{busy || item.issue}}">确认收到面包</button>
+<view wx:if="{{item.issue}}" class="review">
+<view>配送异常 · 等待核实</view>
+<view>{{item.issue.reason}}</view>
+<button wx:if="{{actor==='merchant'}}" data-id="{{item.id}}" bindtap="resolveIssue" disabled="{{busy}}">核实并恢复状态</button>
+</view>
+<button wx:elif="{{(actor===item.buyerId && item.stage>=3) || (actor==='courier' && item.courierId===actor && item.stage>=2 && item.stage<4) || (actor==='merchant' && item.stage>0 && item.stage<4)}}" data-id="{{item.id}}" bindtap="reportIssue" disabled="{{busy}}">未收到货／状态点错 · 反馈异常</button>
+<view wx:if="{{item.review}}" class="review">{{item.review.rating}} 星<text wx:if="{{item.review.comment}}"> · {{item.review.comment}}</text>
+</view>
+<view wx:if="{{actor===item.buyerId && item.stage===4 && !item.review && !item.issue}}">
+<view>配送体验（1—5星）</view>
+<slider min="1" max="5" step="1" value="{{reviewDrafts[item.id].rating || 5}}" show-value data-id="{{item.id}}" data-key="rating" bindchange="reviewField"/>
+<textarea placeholder="评价与建议（选填，500字以内）" value="{{reviewDrafts[item.id].comment || ''}}" data-id="{{item.id}}" data-key="comment" bindinput="reviewField" maxlength="500"/>
+<button data-id="{{item.id}}" bindtap="review" disabled="{{busy}}">提交评价</button>
+</view>
+</view>
+</block>
+<block wx:if="{{currentView==='workbench'}}">
+<view wx:if="{{actor==='merchant'}}">
+<button bindtap="toggleManagement">商品管理 · {{managementOpen?'收起':'上新时展开'}}</button>
+<view wx:if="{{managementOpen}}">
+<view class="card">
+<view class="title">种类管理</view>
+<view class="muted">{{categories}}</view>
+<input placeholder="新增分类名称" value="{{categoryName}}" data-key="categoryName" bindinput="field" maxlength="30"/>
+<button bindtap="addCategory" disabled="{{busy}}">新增分类</button>
+<view class="title">上新 · 录入面包</view>
+<picker range="{{categories}}" value="{{categoryIndex}}" data-key="categoryIndex" bindchange="field">
+<view class="picker">商品分类：{{categories[categoryIndex]}} ▾</view>
+</picker>
+<input placeholder="产品名称" value="{{name}}" data-key="name" bindinput="field" maxlength="60"/>
+<input placeholder="单价（元）" type="digit" value="{{price}}" data-key="price" bindinput="field"/>
+<input placeholder="配料与过敏原说明" value="{{allergens}}" data-key="allergens" bindinput="field" maxlength="120"/>
+<button bindtap="product" disabled="{{busy}}">保存产品</button>
+</view>
+<view wx:if="{{actor==='merchant'}}">
+<view class="title">商品目录</view>
+<view class="card" wx:for="{{products}}" wx:key="id" wx:for-index="productIdx">
+<view>{{item.name}} · ¥{{item.price / 100}}</view>
+<view class="muted">
+<text wx:if="{{item.importKey}}">规格：{{item.specification}}</text>
+</view>
+<view class="muted" wx:if="{{item.importKey}}">{{item.source}} · {{item.description}}<text> · </text>过敏原：{{item.allergens}}</view>
+<input value="{{item.allergens}}" data-index="{{productIdx}}" data-key="allergens" bindinput="productField" maxlength="120" placeholder="配料与过敏原说明"/>
+<button data-index="{{productIdx}}" bindtap="saveDetails" disabled="{{busy}}">保存商品说明</button>
+</view>
+</view>
+</view>
+</view>
+</block>
+<block wx:if="{{currentView==='notices'}}">
+<view wx:if="{{me.role==='buyer'}}" class="card">
+<view class="title">配送通知</view>
+<view wx:if="{{authMode==='wechat'}}" class="muted">微信提醒需主动订阅，次数以微信授权为准；未订阅仍可在此查看全部通知。</view>
+<button wx:for="{{subscriptionGroups}}" wx:key="index" data-index="{{index}}" bindtap="subscribeUpdates">订阅配送提醒 {{index+1}}</button>
+<view class="muted">打开页面时自动同步配送消息。</view>
+<view wx:for="{{notifications}}" wx:key="id" class="notice-item {{item.read?'is-read':'is-unread'}}">
+<view class="notice-top">
+<text class="notice-title">{{item.title}}</text>
+<text class="notice-state">{{item.read?'已读':'新消息'}}</text>
+</view>
+<view class="notice-message">{{item.message}}</view>
+<view class="notice-bottom">
+<text class="muted">{{item.number}}</text>
+<button wx:if="{{!item.read}}" class="notice-read" data-id="{{item.id}}" bindtap="readNotice">标为已读</button>
+</view>
+</view>
+<view wx:if="{{!notifications.length}}" class="muted">暂无配送通知</view>
+</view>
+<view wx:if="{{me.role!=='buyer'}}" class="card muted">暂无客户配送消息</view>
+</block>
+<view class="bottom-nav">
+<button class="nav-item {{currentView==='orders'?'active':''}}" data-tab="orders" bindtap="switchTab">
+<text class="nav-symbol">▤</text>
+<text>订单</text>
+</button>
+<button class="nav-item {{currentView!=='orders'?'active':''}}" data-tab="my" bindtap="switchTab">
+<text class="nav-symbol">◯</text>
+<text>我的</text>
+<text wx:if="{{unreadCount>0}}" class="nav-dot">
+</text>
+</button>
+</view>
+</block>
+</view>
+<view class="muted footer">{{branding.platformName}} / 订单进度随时查看</view>
+</view>
+<view wx:if="{{confirmation}}" class="confirm-overlay"><view class="confirm-sheet" role="dialog" aria-label="配送操作确认"><view class="confirm-emblem">✓</view><view class="confirm-title">{{confirmation.title}}</view><view class="confirm-copy">{{confirmation.message}}</view><view class="confirm-summary"><view>{{confirmation.summary}}</view><view class="confirm-location">{{confirmation.location}}</view></view><view class="confirm-note">确认后更新配送进度，并向客户生成通知。</view><view class="confirm-actions"><button class="secondary" bindtap="cancelProgress">取消</button><button data-confirm="{{true}}" bindtap="finishProgress">确认操作</button></view></view></view>
