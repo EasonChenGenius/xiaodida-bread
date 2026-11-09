@@ -41,12 +41,25 @@
 - 2026-11-09 已创建受控虚构商家和配送员，密码只保存在服务器 0600 凭据文件中。通过服务器本机 HTTP 与真实 MySQL 完成 56 项检查，覆盖公开注册角色限制、错入口、绑定与本人确认、双商品建单、建单幂等与变更拒绝、二次确认、四步履约、旧阶段重放拒绝、异常冻结、误签收恢复、重新配送、选填评价、通知隔离及退出后会话失效。
 - 业务验收后复核为 3 个虚构客户、1 个虚构订单；订单最终阶段为 4，无未处理异常，评分为 5，客户有 11 条站内消息，另一虚构客户的订单和消息均为 0，本次活跃测试会话为 0。报告为 `/opt/xiaodida-trial-business-acceptance-20261109-retry1.json`，权限 0600；健康接口保持正常。该结果只证明服务器端流程和站内消息，不代表真机、弱网、并发、短信、微信订阅消息或系统通知通过。
 
+## 2026-11-09 受控访问（Tailscale Serve）
+
+本轮目标是「受控访问＋iPhone 真机验收」，未公开上线、未启用 Funnel、未开放公网端口、未修改阿里云安全组、未购买资源。
+
+- 管理通道：云助手 `RunCommand` 持续返回 `ClientNetworkBlocked`；在用户授权的一次控制台正常重启后，root 离线重置密码生效，改用阿里云官方 VNC 登录，确认 `mysql`、`tailscaled`、`xiaodida-trial.service`、`aliyun.service` 均为 active，`/healthz` 返回 V0.12.1/web/mysql。
+- 定位到同一根因：Tailscale 接管 DNS 后 `/etc/resolv.conf` 指向 `127.0.0.53`，而阿里内网 DNS `100.100.2.136/138` 直连即超时，公共域名与阿里云内网域名全部解析失败。这既造成云助手域名不可达，也造成 Tailscale 申请 `acme-v02.api.letsencrypt.org` 超时、HTTPS 证书签不下来。
+- 可回滚修复：`tailscale set --accept-dns=false` 停用 DNS 接管；备份原配置到 `/root/resolv.conf.before-20261109` 和 `/root/resolv.conf.link-20261109` 后，把解析器改为阿里公共 DNS `223.5.5.5` 为主、`100.100.2.136` 为次。修复后 ACME 域名及 `cn-hangzhou.axt.aliyun.com` 均可解析；重启 `tailscaled` 一次后日志依次为 `registered ACME account`、`dns-01`、`got cert`，健康检查 `tls-cert-pending: ok`。
+- 由本人在 Tailscale 管理台启用 HTTPS Certificates（MagicDNS 原本已开启）。该开关会把机器名写入公开的证书透明日志，仅为主机名、不代表开放访问；未启用 Funnel。
+- 服务器执行 `tailscale serve --bg --https=443 http://127.0.0.1:8080`。`tailscale serve status --json` 显示 `TCP.443.HTTPS=true`，`Web["<MagicDNS 主机名>:443"].Handlers["/"].Proxy=http://127.0.0.1:8080`。入口是 tailnet 内专用 HTTPS 地址，仅在本会话交付，不写入仓库文档。
+- 安全边界复核：`tailscale funnel status` 仍为 tailnet only；应用仍只监听 `127.0.0.1:8080`，443 仅由 tailscaled 监听在 Tailscale 私有地址及对应 IPv6 上，未监听 `0.0.0.0`；服务器 CLI 读到 iPhone peer `Online=true`。
+- 服务器本机以 `--resolve` 自连该 HTTPS 地址返回 `tlsv1 alert internal error`，日志为 `no webserver configured for name/port`，来源是节点自身私有地址。Serve 只服务 tailnet 对端，本机自测不能作为可用结论，必须由 iPhone 真机验证；取得真机结果前不得标记受控访问或真机验收通过。
+- 云助手内网服务地址虽已可解析，但到其内部 IP 的 HTTPS 连接仍超时，管理通道仍以 VNC 为准；未改动安全组。
+
 ## 尚未完成，不得标记为通过
 
-1. 备份失败告警，以及 `/healthz`、Node 进程或 systemd 服务失败告警；每日备份的自动异地复制和最新备份恢复抽检仍需完善。
+1. 备份失败告警，以及 `/healthz`、Node 进程或 systemd 服务失败告警；每日备份的自动异地复制和最新备份恢复抽检仍需完善。用户已明确当前先不处理备份。
 2. 云监控邮件实际送达测试，以及费用预算在 T+2 后的实际值、预测值和通知链路复核。
-3. 手机浏览器及微信内真机验收，包括弱网、网络切换、前后台恢复、会话行为和真实外部通知；服务器 HTTP 验收不能代替这些项目。
-4. 代理后的容量、并发和持久限流验收，以及域名、HTTPS、ICP备案、国内网络可达性和公开访问验收。
+3. iPhone 真机验收：三角色入口、登录、布局、刷新、退出、会话恢复、绑定、订单进度与评价，以及弱网、网络切换、前后台恢复、微信内页面和真实外部通知。Tailscale Serve 入口已配置，但尚无真机结果，不得标记通过。
+4. Tailscale Serve 作为反向代理后的可信来源识别、容量、并发和持久限流验收；以及域名、公开 HTTPS、ICP备案、国内网络可达性和公开访问验收。
 
 云端目前保留原虚构客户及找回密码申请、本次新增的虚构商家／配送员／两个客户，以及 1 个已完成虚构订单、相关绑定、站内消息、事件和幂等记录；没有真实订单或支付。清理测试数据或隔离恢复库前必须另行确认范围，不得直接清空数据库。
 
@@ -85,9 +98,9 @@ awk '/^Uid:/ {print $2}' "/proc/$pid/status"
 
 ## 反向代理与限流阻断项
 
-当前 `server.mjs` 使用 `req.socket.remoteAddress` 生成进程内限流键，并将该地址传给数据库认证预算。当前无反向代理、仅本机访问，符合受限试用边界。
+当前 `server.mjs` 使用 `req.socket.remoteAddress` 生成进程内限流键，并将该地址传给数据库认证预算。2026-11-09 起 Tailscale Serve 已成为实际反向代理：它把 tailnet 请求转发到 `127.0.0.1:8080`，因此应用看到的所有来源都是回环地址，多个受控设备会共享同一登录限次。单手机、少量虚构账号的受控试用可接受，但不得据此认为限流已验证。
 
-未来接入同机 Nginx 等反向代理后，所有外部客户可能被归为同一个代理地址，造成全站共享登录限次。公开访问前必须：
+无论当前 Serve 还是未来同机 Nginx 等反向代理，公开访问前都必须：
 
 1. 只信任明确配置的受控代理，不直接信任任意 `X-Forwarded-For`。
 2. 验证直连伪造头、代理转发头、多客户端独立限流和异常客户端隔离。
@@ -99,7 +112,7 @@ awk '/^Uid:/ {print $2}' "/proc/$pid/status"
 
 服务器本机 HTTP 验收已走通：绑定与本人确认 → 多款建单 → 备货 → 取货 → 送达 → 客户签收 → 选填评价，以及二次确认、异常冻结、误签收恢复、失败重试和幂等。56 项结果及边界已记录在上方；真机仍需覆盖弱网、网络切换、前后台恢复、会话过期、退出及通知失败。
 
-当前应用只监听回环地址，手机不能直接访问电脑或服务器的 localhost。真机验收需要另行设计受控访问方式；未经确认不得直接开放公网端口。
+当前应用只监听回环地址，手机不能直接访问服务器的 localhost。受控访问已通过 Tailscale Serve 提供 tailnet 内专用 HTTPS 入口（不启用 Funnel、不改安全组）；真机验收须在 iPhone 打开 Tailscale 并确认 Connected 后进行。未经确认不得直接开放公网端口。
 
 ## 公开部署前置条件
 
