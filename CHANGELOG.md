@@ -3,7 +3,8 @@
 - 用户授权的一次控制台正常重启后 root 密码生效，改用阿里云官方 VNC 完成服务器侧操作；复核四项服务 active、`/healthz` 为 V0.12.1/web/mysql。
 - 定位并修复长期 DNS 故障：Tailscale 接管后 `100.100.2.136/138` 不可达、`127.0.0.53` 解析全部超时，连带造成云助手 `ClientNetworkBlocked` 与 Let's Encrypt ACME 证书申请失败。停用 Tailscale DNS 接管、备份原配置后改用阿里公共 DNS `223.5.5.5` 为主，解析恢复；重启 `tailscaled` 后证书签发成功。
 - 由本人在 Tailscale 管理台启用 HTTPS Certificates（机器名会进入公开证书透明日志，仅主机名）；配置 `tailscale serve --bg --https=443 http://127.0.0.1:8080`，生成 tailnet 内专用 HTTPS 入口，Funnel 保持关闭、安全组未改、应用仍只监听回环地址。
-- 记录 Serve 已成为实际反向代理，所有来源被归为 `127.0.0.1`，限流共享问题在公开访问前必须改造；本机自连 HTTPS 被 Serve 拒绝属预期，须由 iPhone 真机验证。
+- 记录 Serve 已成为实际反向代理，所有来源被归为 `127.0.0.1`，限流共享问题在公开访问前必须改造。
+- 更正（同日复核）：此前把 tailnet 名中的**数字 `1` 误抄为字母 `l`**，交付给用户的网址和全部服务器自测命令都用了错误主机名，因而出现 `tlsv1 alert internal error`／`no webserver configured for name/port`，`tailscale cert` 报域名不在允许列表。这不是「Serve 拒绝本机自连」，也不是控制面缓存异常或手机侧 DNS 未接管，而是请求主机名与 Serve 配置键不匹配。以管理台复制的域名逐字节核对并改用正确主机名复核：本机 HTTPS `/healthz` 返回 V0.12.1/web/mysql，`/`、`/customer/`、`/merchant/`、`/courier/` 全部 200，证书成功签发，`serve status` 与 `funnel status` 均为 tailnet only。服务器端受控链路已验证可用；iPhone 真机验收仍未完成，取得真机结果前不得标记通过。正确入口仅在本会话交付，不写入仓库文档。
 - 未修改业务代码；本地 75 项测试此前已全部通过。真机、弱网、微信内页面、代理后并发与公开部署均未通过验收。
 
 # 部署记录 — 2026-11-08
