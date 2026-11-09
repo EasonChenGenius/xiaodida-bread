@@ -51,7 +51,7 @@
 - 由本人在 Tailscale 管理台启用 HTTPS Certificates（MagicDNS 原本已开启）。该开关会把机器名写入公开的证书透明日志，仅为主机名、不代表开放访问；未启用 Funnel。
 - 服务器执行 `tailscale serve --bg --https=443 http://127.0.0.1:8080`。`tailscale serve status --json` 显示 `TCP.443.HTTPS=true`，`Web["<MagicDNS 主机名>:443"].Handlers["/"].Proxy=http://127.0.0.1:8080`。入口是 tailnet 内专用 HTTPS 地址，仅在本会话交付，不写入仓库文档。
 - 安全边界复核：`tailscale funnel status` 仍为 tailnet only；应用仍只监听 `127.0.0.1:8080`，443 仅由 tailscaled 监听在 Tailscale 私有地址及对应 IPv6 上，未监听 `0.0.0.0`；服务器 CLI 读到 iPhone peer `Online=true`。
-- 服务器本机以 `--resolve` 自连该 HTTPS 地址返回 `tlsv1 alert internal error`，日志为 `no webserver configured for name/port`，来源是节点自身私有地址。Serve 只服务 tailnet 对端，本机自测不能作为可用结论，必须由 iPhone 真机验证；取得真机结果前不得标记受控访问或真机验收通过。
+- 更正（同日复核）：此前把 tailnet 名中的**数字 `1` 误抄为字母 `l`**，交付给用户的网址、以及所有服务器自测命令都用了错误主机名，因而 `/healthz` 与四个入口自测返回 `tlsv1 alert internal error`／`no webserver configured for name/port`，`tailscale cert` 报 `invalid domain ... must be one of [正确域名]`。这不是「Serve 拒绝本机自连」，也不是 iPhone 侧 DNS 未接管。以管理台复制的 tailnet 名逐字节核对后改用正确主机名复核：本机 HTTPS `/healthz` 返回 V0.12.1/web/mysql，`/`、`/customer/`、`/merchant/`、`/courier/` 全部 200，`tailscale cert` 成功签发（CN 为正确主机名，有效期至 2027-02-07），`serve status` 与 `funnel status` 均为 tailnet only。服务器端链路已验证可用；iPhone 真机验收仍未完成，取得真机结果前不得标记通过。正确入口仅在本会话交付，不写入仓库文档；后续交付一律从管理台复制完整域名、不手工转录，避免 `1`／`l` 类字符再次误写。
 - 云助手内网服务地址虽已可解析，但到其内部 IP 的 HTTPS 连接仍超时，管理通道仍以 VNC 为准；未改动安全组。
 
 ## 尚未完成，不得标记为通过
