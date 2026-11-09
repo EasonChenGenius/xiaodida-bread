@@ -1,3 +1,11 @@
+# 部署记录 — 2026-11-09（受控访问）
+
+- 用户授权的一次控制台正常重启后 root 密码生效，改用阿里云官方 VNC 完成服务器侧操作；复核四项服务 active、`/healthz` 为 V0.12.1/web/mysql。
+- 定位并修复长期 DNS 故障：Tailscale 接管后 `100.100.2.136/138` 不可达、`127.0.0.53` 解析全部超时，连带造成云助手 `ClientNetworkBlocked` 与 Let's Encrypt ACME 证书申请失败。停用 Tailscale DNS 接管、备份原配置后改用阿里公共 DNS `223.5.5.5` 为主，解析恢复；重启 `tailscaled` 后证书签发成功。
+- 由本人在 Tailscale 管理台启用 HTTPS Certificates（机器名会进入公开证书透明日志，仅主机名）；配置 `tailscale serve --bg --https=443 http://127.0.0.1:8080`，生成 tailnet 内专用 HTTPS 入口，Funnel 保持关闭、安全组未改、应用仍只监听回环地址。
+- 记录 Serve 已成为实际反向代理，所有来源被归为 `127.0.0.1`，限流共享问题在公开访问前必须改造；本机自连 HTTPS 被 Serve 拒绝属预期，须由 iPhone 真机验证。
+- 未修改业务代码；本地 75 项测试此前已全部通过。真机、弱网、微信内页面、代理后并发与公开部署均未通过验收。
+
 # 部署记录 — 2026-11-08
 
 - 增加阿里云受限试用文档：实际运行为原生 Node.js 24＋MySQL 8＋systemd，未公开、未启用支付；旧 CloudBase 文档明确保留为历史方案。
