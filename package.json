@@ -11,6 +11,7 @@
     "build:release": "node scripts/build-release.mjs",
     "start:web": "node --env-file-if-exists=.env.web server.mjs",
     "operator:web": "node --env-file-if-exists=.env.web scripts/create-web-operator.mjs",
+    "operator:passwd:web": "node --env-file-if-exists=.env.web scripts/set-web-operator-password.mjs",
     "recovery:web": "node --env-file-if-exists=.env.web scripts/approve-web-recovery.mjs",
     "check:web-release": "node --env-file-if-exists=.env.web scripts/web-release-check.mjs"
   },
