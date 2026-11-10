@@ -28,13 +28,14 @@ V0.12.1：面向客户统一称“联系微信客服”。客服仍须核验账�
 
 上面的恢复流程是给**客户本人**用的：需要网页申请、负责人核验、签发一次性凭证。商家和配送员是受控创建的操作员账号，负责人本人可直接设置新密码，不必走客户恢复流程，也不必再去服务器翻找创建时生成的随机初始凭据。
 
-在服务器后端目录、显式加载网站私密配置后执行（账号用实际虚构账号替换）：
+本机开发用 `npm run operator:passwd:web -- --username '<账号>'`（读项目 `.env.web`）。云端服务器不读项目 `.env.web`，必须在**后端目录**显式加载网站私密配置后调用脚本，配置内容不打印、不进聊天或仓库：
 
 ```sh
-npm run operator:passwd:web -- --username '<账号>'
+cd /opt/xiaodida-aliyun-web-trial-0.12.1-20261108/backend
+/opt/node-v24.22.2-linux-x64/bin/node --env-file=/etc/xiaodida-trial/web.env scripts/set-web-operator-password.mjs --username '<账号>'
 ```
 
-工具会提示两次输入新密码，输入时不回显，操作员密码须为 12–128 个字符。也可通过标准输入或 `BREAD_OPERATOR_PASSWORD` 环境变量非交互传入；用命令行 `--password` 传入会留在 shell 历史里，仅在不介意时短期使用并随后清理。
+工具会提示两次输入新密码，输入时不回显，操作员密码须为 12–128 个字符。也可通过标准输入或 `BREAD_OPERATOR_PASSWORD` 环境变量非交互传入；用命令行 `--password` 传入会留在 shell 历史里，仅在不介意时短期使用并随后清理。执行前须确认脚本文件已部署到服务器 `scripts/` 目录；仅把代码同步到 Git 仓库不会让云端生效。
 
 工具没有公开 HTTP 接口，只能在 `BREAD_AUTH_MODE=web` 下运行，正式环境只允许 MySQL，且只能修改商家或配送员账号，拒绝客户账号。成功后：数据库只保存新的 scrypt 哈希，撤销该账号全部旧登录与未使用的恢复申请，写入一条 `owner-password-reset` 安全事件，并把 `data/operator-<role>-<时间戳>.json` 中对应的 0600 凭据文件同步更新，避免文件里的旧密码与数据库不一致。新密码不会出现在工具输出、日志、数据库或 Git 仓库。
 
