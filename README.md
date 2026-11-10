@@ -24,7 +24,7 @@
 
 本机 demo/wechat 默认分别使用单实例 SQLite，首次启动可从旧 JSON 迁移并保留备份。`npm run backup` 和现有 `scripts/restore.mjs` 只适用于 SQLite，不能用于本轮 MySQL。不能同时运行多个 SQLite 写实例。
 
-网页模式通过 `npm run start:web` 读取 `.env.web`；生产环境使用 MySQL。商家和配送员分别通过 `npm run operator:web -- merchant '<账号>'`、`npm run operator:web -- courier '<账号>'` 受控创建，凭据只写入权限为 0600 的本机文件。`npm run check:web-release` 是未来公网 HTTPS 发布门禁，不适用于当前仅回环地址的私有试用。
+网页模式通过 `npm run start:web` 读取 `.env.web`；生产环境使用 MySQL。商家和配送员分别通过 `npm run operator:web -- merchant '<账号>'`、`npm run operator:web -- courier '<账号>'` 受控创建，凭据只写入权限为 0600 的本机文件。负责人可用 `npm run operator:passwd:web -- --username '<账号>'` 为已有商家或配送员重设密码：新密码在终端不回显地输入两次，工具同步更新数据库密码哈希、撤销该账号全部旧登录，并同步更新对应 0600 凭据文件；它只在服务器本机命令行运行，没有公开 HTTP 接口。`npm run check:web-release` 是未来公网 HTTPS 发布门禁，不适用于当前仅回环地址的私有试用。
 
 ## 验证与上线
 
