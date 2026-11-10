@@ -14,15 +14,15 @@ test('服务端换取身份、会话、权限和客户确认完整闭环（模�
  const state=(await call('state',{token:buyer,actor:'merchant'})).data;assert.equal(state.me.role,'buyer');assert.equal(state.customers.length,0);assert.equal(state.orders.length,0);
  assert.equal((await call('action/product',{token:buyer,body:{name:'bad',price:100,stock:1,allergens:'测试'}})).status,400);
  const product=(await call('action/product',{token:merchant,body:{name:'测试面包',price:800,stock:2,allergens:'测试：小麦'}})).data;
- const code=(await call('action/binding-code',{token:buyer,body:{}})).data.code;
- await call('action/binding-request',{token:merchant,body:{code}});const request=(await call('state',{token:buyer})).data.bindingRequests[0];assert.ok(request);
- assert.equal((await call('action/binding-confirm',{token:other,body:{id:request.id}})).status,400);
- await call('action/binding-confirm',{token:buyer,body:{id:request.id}});
+ // 绑定确认已去掉：旧绑定接口返回 400，商家无需绑定码即可直接建单。
+ assert.equal((await call('action/binding-code',{token:buyer,body:{}})).status,400);
+ assert.equal((await call('action/binding-request',{token:merchant,body:{code:'ABCDEFGHIJKL'}})).status,400);
  const second=(await call('action/product',{token:merchant,body:{name:'第二款测试面包',price:350,allergens:''}})).data;
  const b={requestId:'test-request-12345678',items:[{productId:product.id,quantity:2},{productId:second.id,quantity:3}],buyerId:state.me.id,building:'东苑13栋',deliveryDay:'周三'};
  const order=(await call('action/order',{token:merchant,body:b})).data;assert.ok(order.id);assert.equal(order.total,2650);assert.equal(order.items.length,2);
  assert.equal((await call('action/order',{token:merchant,body:b})).data.id,order.id);
  assert.equal((await call('state',{token:merchant})).data.orders.length,1);
+ assert.ok((await call('state',{token:merchant})).data.customers.some(c=>c.id===state.me.id));
  assert.equal((await call('action/progress',{token:merchant,body:{id:order.id,confirmed:false,expectedStage:0}})).status,400);
  assert.equal((await call('state',{token:buyer})).data.orders[0].stage,0);
  assert.equal((await call('state',{token:other})).data.orders.length,0);

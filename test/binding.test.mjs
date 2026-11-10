@@ -1,28 +1,41 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {initial,mutate,view} from '../domain.mjs';
-test('绑定码单次使用且须买家确认，不能替其他客户确认',()=>{
- const db=initial();const code=mutate(db,'buyer-a','binding-code',{}).code;
- assert.ok(!JSON.stringify(db).includes(code));assert.equal(view(db,'merchant').customers.length,0);
- mutate(db,'merchant','binding-request',{code});assert.throws(()=>mutate(db,'merchant','binding-request',{code}),/无效/);
- const request=view(db,'buyer-a').bindingRequests[0];assert.equal(view(db,'buyer-b').bindingRequests.length,0);
- assert.throws(()=>mutate(db,'buyer-b','binding-confirm',{id:request.id}));assert.equal(view(db,'merchant').customers.length,0);
- mutate(db,'buyer-a','binding-confirm',{id:request.id});assert.equal(view(db,'merchant').customers[0].id,'buyer-a');assert.throws(()=>mutate(db,'buyer-a','binding-confirm',{id:request.id}));
+test('未绑定也可直接建单，建单后自动绑定并进入商家客户名单',()=>{
+ const db=initial();db.products.push({id:'p',name:'测试面包',price:800,allergens:'小麦'});
+ const b={productId:'p',buyerId:'buyer-a',quantity:1,building:'西苑6栋',deliveryDay:'周五'};
+ assert.equal(view(db,'merchant').customers.length,2);
+ const o=mutate(db,'merchant','order',b);assert.equal(o.buyerId,'buyer-a');
+ assert.ok(db.users.find(u=>u.id==='buyer-a').boundAt);
+ assert.equal(view(db,'merchant').customers.find(c=>c.id==='buyer-a').bound,true);
+ assert.equal(view(db,'buyer-a').orders.length,1);
+ assert.throws(()=>mutate(db,'merchant','order',{...b,buyerId:'nobody'}),/客户不存在/);
 });
-test('新码撤销旧码及旧申请、过期和拒绝均不绑定',()=>{
- const db=initial();let code=mutate(db,'buyer-a','binding-code',{}).code;
- const replacement=mutate(db,'buyer-a','binding-code',{}).code;assert.throws(()=>mutate(db,'merchant','binding-request',{code}));
- db.bindingCodes[0].expiresAt=Date.now()-1;assert.throws(()=>mutate(db,'merchant','binding-request',{code:replacement}));
- code=mutate(db,'buyer-a','binding-code',{}).code;mutate(db,'merchant','binding-request',{code});let r=db.bindingRequests[0];
- mutate(db,'buyer-a','binding-reject',{id:r.id});assert.equal(view(db,'merchant').customers.length,0);
- code=mutate(db,'buyer-a','binding-code',{}).code;mutate(db,'merchant','binding-request',{code});r=db.bindingRequests[0];r.expiresAt=Date.now()-1;
- assert.throws(()=>mutate(db,'buyer-a','binding-confirm',{id:r.id}));assert.equal(view(db,'merchant').bindingRequests.length,0);
+test('商家可为客户写备注，备注可清空；客户本人不可改',()=>{
+ const db=initial();
+ mutate(db,'merchant','customer-note',{buyerId:'buyer-a',note:'不吃坚果'});
+ assert.equal(view(db,'merchant').customers.find(c=>c.id==='buyer-a').note,'不吃坚果');
+ assert.throws(()=>mutate(db,'buyer-a','customer-note',{buyerId:'buyer-a',note:'自己改'}));
+ assert.throws(()=>mutate(db,'merchant','customer-note',{buyerId:'buyer-a',note:'x'.repeat(121)}));
+ assert.throws(()=>mutate(db,'merchant','customer-note',{buyerId:'nobody',note:'x'}));
+ mutate(db,'merchant','customer-note',{buyerId:'buyer-a',note:''});
+ assert.equal(view(db,'merchant').customers.find(c=>c.id==='buyer-a').note,'');
 });
-test('未绑定不可建单，旧零库存商品可建单且仅商家可改说明',()=>{
+test('旧绑定接口已移除，不再产生待确认申请',()=>{
+ const db=initial();
+ // 旧绑定入口已删除：调用不再产生绑定码、申请或确认，只会失败，客户名单不变。
+ assert.throws(()=>mutate(db,'buyer-a','binding-code',{}));
+ assert.throws(()=>mutate(db,'merchant','binding-request',{code:'ABCDEFGHIJKL'}));
+ assert.throws(()=>mutate(db,'buyer-a','binding-confirm',{id:'x'}));
+ assert.equal(view(db,'merchant').customers.filter(c=>c.bound).length,0);
+ assert.equal(view(db,'merchant').bindingRequests,undefined);
+ assert.equal(view(db,'buyer-a').bindingRequests,undefined);
+ assert.deepEqual(view(db,'merchant').merchantNotices,[]);
+});
+test('旧零库存商品可建单且仅商家可改说明',()=>{
  const db=initial();db.products.push({id:'p',name:'测试面包',price:800,stock:0,stockPending:true,allergens:'待补充'});
  const b={productId:'p',buyerId:'buyer-a',quantity:1,building:'西苑6栋',deliveryDay:'周五'};
- assert.throws(()=>mutate(db,'merchant','order',b),/绑定/);assert.throws(()=>mutate(db,'buyer-a','product-details',{id:'p',stock:3,allergens:'小麦'}));
+ const o=mutate(db,'merchant','order',b);assert.equal(db.products[0].stock,undefined);assert.equal(o.allergens,'待补充');
+ assert.throws(()=>mutate(db,'buyer-a','product-details',{id:'p',stock:3,allergens:'小麦'}));
  mutate(db,'merchant','product-details',{id:'p',stock:3,allergens:'测试：小麦、乳'});
- const code=mutate(db,'buyer-a','binding-code',{}).code;mutate(db,'merchant','binding-request',{code});mutate(db,'buyer-a','binding-confirm',{id:db.bindingRequests[0].id});
- const o=mutate(db,'merchant','order',b);assert.equal(db.products[0].stock,undefined);assert.equal(o.allergens,'测试：小麦、乳');assert.equal(view(db,'buyer-b').orders.length,0);
  assert.throws(()=>mutate(db,'merchant','product-details',{id:'p',allergens:''}));
 });

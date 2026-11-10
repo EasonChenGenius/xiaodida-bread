@@ -51,17 +51,10 @@
 </button>
 </view>
 <view wx:if="{{me.role==='buyer'}}" class="card">
-<view class="title">{{me.bound?'已绑定日尝手作':'首次使用 · 绑定日尝手作'}}</view>
+<view class="title">{{me.bound?'已加入日尝手作客户名单':'欢迎加入日尝手作'}}</view>
 <input value="{{customerName}}" data-key="customerName" bindinput="field" maxlength="30" placeholder="方便商家识别的称呼"/>
 <button bindtap="saveName" disabled="{{busy}}">保存称呼</button>
-<block wx:if="{{!me.bound}}">
-<view class="muted">把绑定码提供给商家，并在这里确认匹配。绑定码10分钟有效，新码替换旧码。</view>
-<button bindtap="bindingCode" disabled="{{busy}}">生成新绑定码</button>
-<view class="title">{{bindingCode}}</view>
-<view wx:for="{{bindingRequests}}" wx:key="id" class="review">日尝手作请求将你加入客户名单，为你建立配送单。<button data-id="{{item.id}}" data-action="binding-confirm" bindtap="confirmBinding" disabled="{{busy}}">确认绑定日尝手作</button>
-<button data-id="{{item.id}}" data-action="binding-reject" bindtap="confirmBinding" disabled="{{busy}}">拒绝本次绑定</button>
-</view>
-</block>
+<view class="muted">商家可以直接为你建立配送单，不用你先确认绑定；建单后进度会显示在这里。</view>
 </view>
 <view wx:if="{{authMode==='demo'}}" class="card">
 <view class="muted">演示身份仅用于本机测试；正式版工作台按账号权限开放。</view>
@@ -78,7 +71,7 @@
 <block wx:if="{{currentView==='workbench'}}">
 <block wx:if="{{actor==='merchant'}}">
 <view class="card">
-<view class="title">绑定买家并建立配送单</view>
+<view class="title">建立配送单</view>
 <picker range="{{buyerNames}}" value="{{buyerIndex < 0 ? 0 : buyerIndex}}" data-key="buyerIndex" bindchange="field">
 <view class="picker">买家：{{buyerIndex < 0 ? '请选择这张配送单对应的买家' : buyerNames[buyerIndex]}} ▾</view>
 </picker>
@@ -101,14 +94,18 @@
 <picker range="{{deliveryDays}}" value="{{deliveryDayIndex < 0 ? 0 : deliveryDayIndex}}" data-key="deliveryDayIndex" bindchange="field">
 <view class="picker">每周配送日：{{deliveryDayIndex < 0 ? '请选择星期几配送' : deliveryDays[deliveryDayIndex]}} ▾</view>
 </picker>
-<button bindtap="order" disabled="{{busy}}">匹配买家并创建配送单</button>
+<button bindtap="order" disabled="{{busy}}">创建配送单</button>
 </view>
 <view class="card">
-<view class="title">绑定新买家</view>
-<input value="{{bindCode}}" data-key="bindCode" bindinput="field" maxlength="12" placeholder="输入客户提供的12位绑定码"/>
-<button bindtap="bindBuyer" disabled="{{busy}}">提交匹配 · 等待客户确认</button>
-<view class="muted" wx:for="{{bindingRequests}}" wx:key="id">{{item.name}} · 等待确认</view>
-<view class="muted">已绑定客户 {{customers.length}} 位</view>
+<view class="title">客户管理 · 客户名单（{{customers.length}} 位）</view>
+<block wx:for="{{merchantNotices}}" wx:key="id"><view wx:if="{{!item.read}}" class="review">新客户注册：{{item.name}}（{{item.username}}），通过微信群聊对上账号后可直接建单。<button data-id="{{item.id}}" bindtap="readMerchantNotice" disabled="{{busy}}">知道了</button></view></block>
+<view class="muted">新客户注册后会在这里提醒；不用等客户确认，选好买家就能直接建单，建单后自动加入客户名单。</view>
+<picker range="{{buyerNames}}" value="{{noteBuyerIndex < 0 ? 0 : noteBuyerIndex}}" data-key="noteBuyerIndex" bindchange="field">
+<view class="picker">备注客户：{{noteBuyerIndex < 0 ? '请选择客户' : buyerNames[noteBuyerIndex]}} ▾</view>
+</picker>
+<input value="{{noteText}}" data-key="noteText" bindinput="field" maxlength="120" placeholder="备注（120字以内，留空清除）"/>
+<button bindtap="saveCustomerNote" disabled="{{busy}}">保存备注</button>
+<view class="muted" wx:for="{{customers}}" wx:key="id">{{item.name}}{{item.note ? ' · '+item.note : ''}}</view>
 </view>
 </block>
 </block>

@@ -12,7 +12,7 @@ export const defaultCategories=['碱水条系列','小餐包系列','软欧系�
 export function migrate(db){
  db.categories??=[...defaultCategories];db.demo??=true;
  db.users??=db.demo?customers.map(c=>({...c,role:'buyer',boundAt:db.orders.some(o=>o.buyerId===c.id)?new Date().toISOString():null})):[];
- db.orderRequests??={};db.notifications??=[];db.bindingCodes??=[];db.bindingRequests??=[];for(const p of db.products){delete p.stock;delete p.stockPending;}for(const o of db.orders){o.items??=[{productId:null,name:o.product,quantity:o.quantity,unitPrice:o.total/o.quantity,total:o.total,allergens:o.allergens||''}];o.summary=o.items.map(i=>i.name+' × '+i.quantity).join('、');}return db;
+ db.orderRequests??={};db.notifications??=[];db.bindingCodes??=[];db.bindingRequests??=[];db.merchantNotices??=[];for(const p of db.products){delete p.stock;delete p.stockPending;}for(const o of db.orders){o.items??=[{productId:null,name:o.product,quantity:o.quantity,unitPrice:o.total/o.quantity,total:o.total,allergens:o.allergens||''}];o.summary=o.items.map(i=>i.name+' × '+i.quantity).join('、');}return db;
 }
 export const buildings=[...Array.from({length:13},(_,i)=>`东苑${i+1}栋`),...Array.from({length:6},(_,i)=>`西苑${i+1}栋`)];
 export const customers=[{id:'buyer-a',name:'同学甲（测试）'},{id:'buyer-b',name:'同学乙（测试）'}];
@@ -41,23 +41,16 @@ export function mutate(db,actor,action,b){
  if(action==='profile'){
  requireValue(user?.role==='buyer','仅客户可修改自己的称呼');requireValue(typeof b.name==='string'&&b.name.trim().length>0&&b.name.trim().length<=30,'称呼须为1至30字');user.name=b.name.trim();return {ok:true};
  }
- if(action==='binding-code'){
- requireValue(user?.role==='buyer','仅客户可生成绑定码');requireValue(!user.boundAt,'已经绑定日尝手作，可直接等待商家建单');
- db.bindingCodes=db.bindingCodes.filter(c=>c.buyerId!==actor&&c.expiresAt>Date.now());
- db.bindingRequests=db.bindingRequests.filter(r=>r.buyerId!==actor);
- const code=crypto.randomUUID().replaceAll('-','').slice(0,12).toUpperCase();
- db.bindingCodes.push({buyerId:actor,hash:hashCode(code),expiresAt:Date.now()+600000});return {code,expiresAt:Date.now()+600000};
+ if(action==='customer-note'){
+ requireValue(actor==='merchant','仅商家可为客户写备注');
+ const buyer=db.users.find(u=>u.id===b.buyerId&&u.role==='buyer');requireValue(buyer,'客户不存在');
+ requireValue(typeof b.note==='string'&&b.note.trim().length<=120,'备注须为120字以内');
+ buyer.note=b.note.trim();return {ok:true};
  }
- if(action==='binding-request'){
- requireValue(actor==='merchant','仅商家可匹配客户');requireValue(typeof b.code==='string'&&/^[A-F0-9]{12}$/.test(b.code.trim().toUpperCase()),'请输入客户提供的12位绑定码');
- const code=db.bindingCodes.find(c=>c.hash===hashCode(b.code.trim().toUpperCase())&&c.expiresAt>Date.now());requireValue(code,'绑定码无效、过期或已使用');
- const buyer=db.users.find(u=>u.id===code.buyerId&&u.role==='buyer');requireValue(buyer&&!buyer.boundAt,'客户已绑定或不存在');
- db.bindingCodes=db.bindingCodes.filter(c=>c!==code);db.bindingRequests=db.bindingRequests.filter(r=>r.buyerId!==buyer.id&&r.expiresAt>Date.now());
- const request={id:crypto.randomUUID(),buyerId:buyer.id,expiresAt:Date.now()+600000};db.bindingRequests.push(request);return {name:buyer.name,pending:true};
- }
- if(action==='binding-confirm'||action==='binding-reject'){
- const request=db.bindingRequests.find(r=>r.id===b.id&&r.buyerId===actor&&r.expiresAt>Date.now());requireValue(user?.role==='buyer'&&request,'绑定申请不存在或已过期');
- db.bindingRequests=db.bindingRequests.filter(r=>r.id!==request.id);if(action==='binding-confirm')user.boundAt=new Date().toISOString();return {ok:true};
+ if(action==='merchant-notice-read'){
+ requireValue(actor==='merchant','仅商家可处理新客户提醒');
+ const notice=db.merchantNotices.find(n=>n.id===b.id);requireValue(notice,'提醒不存在');
+ notice.read=true;return {ok:true};
  }
  if(action==='product-details'){
  requireValue(actor==='merchant','仅商家可维护商品说明');const p=db.products.find(p=>p.id===b.id);requireValue(p,'商品不存在');requireValue(typeof b.allergens==='string'&&b.allergens.trim().length>0&&b.allergens.length<=120,'请填写120字以内配料与过敏原说明');
@@ -81,7 +74,7 @@ export function mutate(db,actor,action,b){
  requireValue(actor==='merchant','仅商家可录单');
  const requestId=b.requestId;let requestHash;
  if(requestId!==undefined){requireValue(typeof requestId==='string'&&/^[A-Za-z0-9_-]{16,100}$/.test(requestId),'建单请求标识无效');const {requestId:ignored,...payload}=b;requestHash=hashCode(JSON.stringify(payload));const old=db.orderRequests[requestId];if(old){requireValue(old.hash===requestHash,'同一建单请求内容已变更，请重新建单');const order=db.orders.find(o=>o.id===old.id);requireValue(order,'历史建单记录不存在');return order;}}
- requireValue(db.users.some(c=>c.id===b.buyerId&&c.role==='buyer'&&c.boundAt),'请先完成客户绑定，再创建配送单');
+ const buyer=db.users.find(c=>c.id===b.buyerId&&c.role==='buyer');requireValue(buyer,'客户不存在');if(!buyer.boundAt)buyer.boundAt=new Date().toISOString();
  const rows=b.items===undefined?[{productId:b.productId,quantity:b.quantity}]:b.items;
  requireValue(Array.isArray(rows)&&rows.length>0&&rows.length<=20,'请添加1至20款面包');
  const seen=new Set();const items=rows.map(row=>{requireValue(row&&typeof row==='object','商品明细无效');const p=db.products.find(p=>p.id===row.productId);requireValue(p,'产品不存在');requireValue(!seen.has(p.id),'同一款面包请合并数量');seen.add(p.id);requireValue(Number.isInteger(row.quantity)&&row.quantity>0&&row.quantity<=50,'每款数量须为1至50的整数');return {productId:p.id,name:p.name,quantity:row.quantity,unitPrice:p.price,total:p.price*row.quantity,allergens:p.allergens};});
@@ -110,10 +103,10 @@ export function mutate(db,actor,action,b){
 }
 export function view(db,actor){
  migrate(db);const user=db.users.find(u=>u.id===actor);const role=actor==='merchant'||actor==='courier'?actor:'buyer';
- const safeUser=u=>({id:u.id,name:u.name,bound:!!u.boundAt});
+ const safeUser=u=>({id:u.id,name:u.name,bound:!!u.boundAt,note:u.note||''});
  return {branding,notifications:db.notifications.filter(n=>n.buyerId===actor),deliveryDays,deliveryWindow,handoffPoint,categories:db.categories,buildings,products:db.products,
  me:{id:actor,role,name:user?.name||(role==='merchant'?'日尝手作商家':'配送员'),bound:!!user?.boundAt,avatar:user?.avatar||''},
- customers:actor==='merchant'?db.users.filter(u=>u.role==='buyer'&&u.boundAt).map(safeUser):[],
- bindingRequests:actor==='merchant'||user?.role==='buyer'?db.bindingRequests.filter(r=>r.expiresAt>Date.now()&&(actor==='merchant'||r.buyerId===actor)).map(r=>({id:r.id,expiresAt:r.expiresAt,name:db.users.find(u=>u.id===r.buyerId)?.name,merchantName:'日尝手作'})):[],
+ customers:actor==='merchant'?db.users.filter(u=>u.role==='buyer').map(safeUser):[],
+ merchantNotices:actor==='merchant'?db.merchantNotices.map(n=>({id:n.id,buyerId:n.buyerId,name:n.name,username:n.username,at:n.at,read:!!n.read})):[],
  orders:db.orders.map(o=>({...o,merchantId:o.merchantId||branding.merchantId,merchantName:o.merchantName||branding.merchantName})).filter(o=>actor==='merchant'||actor==='courier'&&(o.stage===1||o.courierId===actor)||o.buyerId===actor).sort((a,b)=>actor==='courier'?Number(a.stage===4&&!a.issue)-Number(b.stage===4&&!b.issue):0),stages};
 }

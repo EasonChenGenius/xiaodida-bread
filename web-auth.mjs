@@ -16,7 +16,9 @@ export function createWebAuth({now=Date.now}={}){
   if(db.users.some(u=>u.webCredential?.username===key)||role!=='buyer'&&db.users.some(u=>u.id===role))throw Error('无法创建该账号，请更换账号或联系负责人');
   const salt=randomBytes(16).toString('hex'),digest=(await scrypt(password,salt,64)).toString('hex');
   const user={id:role==='buyer'?randomBytes(16).toString('hex'):role,role,name:role==='merchant'?'日尝手作商家':role==='courier'?'配送员':'新同学',boundAt:null,webCredential:{username:key,salt,digest}};
-  db.users.push(user);return issue(db,user);
+  db.users.push(user);
+  if(role==='buyer'){db.merchantNotices??=[];db.merchantNotices.unshift({id:randomBytes(16).toString('hex'),buyerId:user.id,username:key,name:user.name,at:new Date(now()).toISOString(),read:false});db.merchantNotices=db.merchantNotices.slice(0,100);}
+  return issue(db,user);
  },
  async login(db,{username,password,portal}){
   const key=normalizeUsername(username);
